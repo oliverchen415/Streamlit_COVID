@@ -14,6 +14,8 @@ st.header(f'As of {today:%B %d, %Y}')
 DATA_URL = ('https://data.sfgov.org/resource/favi-qct6.csv')
 DATE_COLUMN = 'data_as_of'
 
+st.write('Data sourced from https://data.sfgov.org/COVID-19/Rate-of-COVID-19-Cases-by-Census-ZIP-Code-Tabulati/favi-qct6')
+
 @st.cache
 def load_data(nrows):
     data = pd.read_csv(DATA_URL, nrows=nrows)
