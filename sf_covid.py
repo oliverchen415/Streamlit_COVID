@@ -3,18 +3,21 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import altair as alt
-import datetime
+import pendulum as pnd
 import pydeck as pdk
 
-today = datetime.datetime.today()
+today = pnd.now(tz='US/Pacific').format('MMMM DD, YYYY')
+yest = pnd.yesterday().format('MMMM DD, YYYY')
 
-st.title(f"COVID Cases by Census ZIP Code")
-st.header(f'As of {today:%B %d, %Y}')
+st.title(f"SF COVID Cases by Census ZIP Code")
+st.header(f'As of {today}')
 
 DATA_URL = ('https://data.sfgov.org/resource/favi-qct6.csv')
 DATE_COLUMN = 'data_as_of'
 
-st.write('Data sourced from https://data.sfgov.org/COVID-19/Rate-of-COVID-19-Cases-by-Census-ZIP-Code-Tabulati/favi-qct6')
+st.markdown('Data sourced from '
+            '[data.sfgov.org](https://data.sfgov.org/COVID-19/Rate-of-COVID-19-Cases-by-Census-ZIP-Code-Tabulati/favi-qct6) '
+            f'and last updated {yest}')
 
 @st.cache
 def load_data(nrows):
@@ -26,9 +29,10 @@ def load_data(nrows):
     return data
 
 data = load_data(27)
-if st.sidebar.checkbox('Show raw data'):
-    st.subheader('Raw data')
+if st.sidebar.checkbox('Show raw SF data'):
+    st.subheader('Raw SF data')
     st.write(data)
+    st.write('Click on a column name to sort.')
 
 st.subheader('Number of Confirmed Cases by ZIP Code')
 
@@ -102,8 +106,8 @@ zip_rate_data = zip_rate_data.sort_values(by=['ZIPCode'])
 zip_rate_data = zip_rate_data.reset_index(drop=True)
 zip_rate_dict = zip_rate_data['ZIPCode'].to_dict()
 
-if st.sidebar.checkbox('Show map data'):
-    st.subheader('Map data (for available districts)')
+if st.sidebar.checkbox('Show raw map data'):
+    st.subheader('Raw map data (for available districts)')
     st.write(zip_rate_data)
 
 
@@ -137,7 +141,7 @@ st.pydeck_chart(pdk.Deck(
  ))
 st.write('Mouse over a circle to see the number of cases per 10,000 people.')
 
-find_zip = st.selectbox('Select a ZIP Code.',
+find_zip = st.selectbox('Select your ZIP Code.',
                         zip_rate_data['ZIPCode'])
 
 case_num = 0
@@ -147,9 +151,35 @@ for i, zcode in zip_rate_dict.items():
 
 st.write('For ', find_zip, ', the number of cases per 10k people is',
         zip_rate_data.loc[case_num, 'Rate'], '.')
-st.write('If you don\'t see your ZIP Code, '
-        'then it is possible that there are cases there but the SF government '
-        'has labeled the data as below a certain limit.'
+st.sidebar.markdown('**Notice:** If you don\'t see your ZIP Code, '
+        'then it is possible that there are cases there '
+        'but the number of cases is below a certain limit.'
         )
 
+CA_DATA_URL = 'https://data.chhs.ca.gov/dataset/6882c390-b2d7-4b9a-aefa-2068cee63e47/resource/6cd8d424-dfaa-4bdd-9410-a3d656e1176e/download/covid19data.csv'
+CA_DATE_COL = 'Most Recent Date'
 
+@st.cache
+def load_ca_data(nrows):
+    ca_data = pd.read_csv(CA_DATA_URL, nrows=nrows)
+    #lowercase = lambda x: str(x).lower()
+    #data.rename(lowercase, axis='columns', inplace=True)
+    ca_data[DATE_COLUMN] = pd.to_datetime(ca_data[CA_DATE_COL])
+    return ca_data
+
+ca_data = load_ca_data(2949)
+
+if st.sidebar.checkbox('Examine other counties in California?'):
+    st.subheader('CA Raw COVID 19 Data')
+    st.write(ca_data)
+    st.write('Click on a column to sort.')
+
+    #get the county names in a unique list
+    county = st.selectbox('Pick a county to look at:',
+                          ca_data['County Name']
+    )
+
+
+
+
+st.sidebar.markdown('Made by Oliver Chen. Github repository available upon request.')
