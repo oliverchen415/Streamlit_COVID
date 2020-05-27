@@ -35,6 +35,10 @@ st.sidebar.markdown('**Notice:** If you don\'t see your ZIP Code, '
 data = load_data(27)
 if st.sidebar.checkbox('Show raw SF data'):
     st.subheader('Raw SF data')
+    st.warning('Warning: Data may appear to out of date. '
+                'However, I am pulling data from the SF Data API. '
+                'The data shown below in the charts should be correct.'
+    )
     st.write(data)
     date_updated = data[DATE_COLUMN][0].to_pydatetime().date()
     date_updated = date_updated.strftime('%B %d, %Y')
@@ -70,7 +74,7 @@ chart_text = c.mark_text(
 (c+chart_text).properties(height=900)
 
 st.altair_chart(c,use_container_width=True)
-st.write('Mouse over a bar to see the number of cases.')
+st.info('Mouse over a bar to see the number of cases.')
 
 st.subheader('Map of COVID-19 Cases by ZIP Code')
 
@@ -112,7 +116,7 @@ zip_rate_data = zip_rate_data.sort_values(by=['ZIPCode'])
 zip_rate_data = zip_rate_data.reset_index(drop=True)
 zip_rate_dict = zip_rate_data.loc[:,'ZIPCode'].to_dict()
 
-if st.sidebar.checkbox('Show raw map data'):
+if st.sidebar.checkbox('Show raw SF map data'):
     st.subheader('Raw map data (for available districts)')
     st.write(zip_rate_data)
 
@@ -145,7 +149,7 @@ st.pydeck_chart(pdk.Deck(
         'html': 'Number of Cases per 10000 Residents in {ZIPCode}: <br>{Rate}</br>',
      },
  ))
-st.write('Mouse over a circle to see the number of cases per 10,000 people.')
+st.info('Mouse over a circle to see the number of cases per 10,000 people.')
 
 find_zip = st.selectbox('Select your ZIP Code.',
                         zip_rate_data.loc[:,'ZIPCode'])
@@ -173,6 +177,7 @@ def load_ca_data(nrows):
 ca_data = load_ca_data(2949)
 ca_data = ca_data.drop(columns='data_as_of')
 ca_county_list = ca_data.loc[:,'County Name'].unique()
+ca_county_list = np.sort(ca_county_list)
 ca_data_columns = [col for col in list(ca_data.columns) if col not in ['County Name', 'Most Recent Date']]
 
 st.markdown('---')
@@ -183,16 +188,17 @@ if st.checkbox('Examine other counties in California?'):
         st.write(ca_data)
         st.write('Click on a column to sort.')
 
-    st.subheader('California COVID-19 Data. Updated roughly once a week.')
+    st.subheader('California COVID-19 Data.')
     county = st.selectbox('Pick a county to look at:',
                           ca_county_list
     )
     ca_columns = st.selectbox('Select a column to graph.', ca_data_columns)
     ca_subset_columns = ca_data.loc[ca_data['County Name'] == county]
     ca_subset_columns.loc[:, 'Most Recent Date'] = ca_subset_columns.loc[:, 'Most Recent Date'].map(pd.to_datetime)
-    if st.checkbox('Show subsetted data'):
-        st.write(ca_subset_columns)
     ca_graph_columns = ca_subset_columns.loc[:,('Most Recent Date', ca_columns)]
+
+
+
     county_chart = alt.Chart(ca_graph_columns).mark_line(point=True, size=3).encode(
         x='Most Recent Date',
         y = ca_columns,
@@ -201,6 +207,16 @@ if st.checkbox('Examine other counties in California?'):
         size=75
     )
     st.altair_chart(county_chart, use_container_width=True)
+    st.info('Mouse over a point to see the exact count.')
+
+    st.markdown('---')
+
+    if st.sidebar.checkbox('Show subsetted CA data'):
+        st.warning('The data from CA.gov appears to be updated once a week.')
+        st.markdown('Data sourced from '
+        '[data.ca.gov](https://data.ca.gov/dataset/california-covid-19-hospital-data-and-case-statistics/resource/5342afa3-0e58-40c0-ba2b-9206c3c5b288)')
+        st.write(ca_subset_columns)
+
 
 
 st.sidebar.markdown('Made by Oliver Chen. '
