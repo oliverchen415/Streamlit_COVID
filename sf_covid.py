@@ -12,12 +12,11 @@ yest = pnd.yesterday().format('MMMM DD, YYYY')
 st.title(f"SF COVID Cases by Census ZIP Code")
 st.header(f'As of {today}')
 
-DATA_URL = ('https://data.sfgov.org/resource/favi-qct6.csv')
+DATA_URL = ('https://data.sfgov.org/resource/favi-qct6.csv?$$app_token=yh5qaeaJSvJrdOSv77ZnroO2u')
 DATE_COLUMN = 'data_as_of'
 
 st.markdown('Data sourced from '
-            '[data.sfgov.org](https://data.sfgov.org/COVID-19/Rate-of-COVID-19-Cases-by-Census-ZIP-Code-Tabulati/favi-qct6) '
-            f'and last updated {yest}')
+            '[data.sfgov.org](https://data.sfgov.org/COVID-19/Rate-of-COVID-19-Cases-by-Census-ZIP-Code-Tabulati/favi-qct6)')
 
 @st.cache
 def load_data(nrows):
@@ -37,7 +36,9 @@ data = load_data(27)
 if st.sidebar.checkbox('Show raw SF data'):
     st.subheader('Raw SF data')
     st.write(data)
-    st.write('Click on a column name to sort.')
+    date_updated = data[DATE_COLUMN][0].to_pydatetime().date()
+    date_updated = date_updated.strftime('%B %d, %Y')
+    st.write(f'Click on a column name to sort. Last updated {date_updated}')
 
 st.subheader('Number of Confirmed Cases by ZIP Code')
 
@@ -99,17 +100,17 @@ map_zip_code = pd.DataFrame({
         -122.4,-122.402
     ],})
 
-map_zip_count = zip_data[zip_data['ZIPCode'].isin(map_zip_code['ZIPCode'])]
+map_zip_count = zip_data[zip_data.loc[:,'ZIPCode'].isin(map_zip_code['ZIPCode'])]
 map_zip_count = map_zip_count.dropna()
 
-map_zip_rate = zip_rate[zip_rate['ZIPCode'].isin(map_zip_code['ZIPCode'])]
+map_zip_rate = zip_rate[zip_rate.loc[:,'ZIPCode'].isin(map_zip_code['ZIPCode'])]
 map_zip_rate = map_zip_rate.dropna()
 
 zip_map_data = pd.merge(map_zip_code,map_zip_count, on='ZIPCode')
 zip_rate_data = pd.merge(map_zip_code, map_zip_rate, on='ZIPCode')
 zip_rate_data = zip_rate_data.sort_values(by=['ZIPCode'])
 zip_rate_data = zip_rate_data.reset_index(drop=True)
-zip_rate_dict = zip_rate_data['ZIPCode'].to_dict()
+zip_rate_dict = zip_rate_data.loc[:,'ZIPCode'].to_dict()
 
 if st.sidebar.checkbox('Show raw map data'):
     st.subheader('Raw map data (for available districts)')
@@ -147,7 +148,7 @@ st.pydeck_chart(pdk.Deck(
 st.write('Mouse over a circle to see the number of cases per 10,000 people.')
 
 find_zip = st.selectbox('Select your ZIP Code.',
-                        zip_rate_data['ZIPCode'])
+                        zip_rate_data.loc[:,'ZIPCode'])
 
 case_num = 0
 for i, zcode in zip_rate_dict.items():
@@ -166,12 +167,12 @@ def load_ca_data(nrows):
     ca_data = pd.read_csv(CA_DATA_URL, nrows=nrows)
     #lowercase = lambda x: str(x).lower()
     #data.rename(lowercase, axis='columns', inplace=True)
-    ca_data[DATE_COLUMN] = pd.to_datetime(ca_data[CA_DATE_COL])
+    ca_data.loc[:,DATE_COLUMN] = ca_data.loc[:, CA_DATE_COL].map(pd.to_datetime)
     return ca_data
 
 ca_data = load_ca_data(2949)
 ca_data = ca_data.drop(columns='data_as_of')
-ca_county_list = ca_data['County Name'].unique()
+ca_county_list = ca_data.loc[:,'County Name'].unique()
 ca_data_columns = [col for col in list(ca_data.columns) if col not in ['County Name', 'Most Recent Date']]
 
 st.markdown('---')
@@ -188,10 +189,10 @@ if st.checkbox('Examine other counties in California?'):
     )
     ca_columns = st.selectbox('Select a column to graph.', ca_data_columns)
     ca_subset_columns = ca_data.loc[ca_data['County Name'] == county]
-    ca_subset_columns.loc[:,'Most Recent Date'] = pd.to_datetime(ca_subset_columns.loc[:,'Most Recent Date'])
+    ca_subset_columns.loc[:, 'Most Recent Date'] = ca_subset_columns.loc[:, 'Most Recent Date'].map(pd.to_datetime)
     if st.checkbox('Show subsetted data'):
         st.write(ca_subset_columns)
-    ca_graph_columns = ca_subset_columns[['Most Recent Date', ca_columns]]
+    ca_graph_columns = ca_subset_columns.loc[:,('Most Recent Date', ca_columns)]
     county_chart = alt.Chart(ca_graph_columns).mark_line(point=True, size=3).encode(
         x='Most Recent Date',
         y = ca_columns,
