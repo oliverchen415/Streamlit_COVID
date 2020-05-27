@@ -35,9 +35,9 @@ st.sidebar.markdown('**Notice:** If you don\'t see your ZIP Code, '
 data = load_data(27)
 if st.sidebar.checkbox('Show raw SF data'):
     st.subheader('Raw SF data')
-    st.warning('Warning: Data may appear to out of date. '
-                'However, I am pulling data from the SF Data API. '
-                'The data shown below in the charts should be correct.'
+    st.warning('Warning: Data may appear to be out of date. '
+                'It may require me to restart the Heroku dyno. '
+                'Otherwise the data should appear to be correct.'
     )
     st.write(data)
     date_updated = data[DATE_COLUMN][0].to_pydatetime().date()
