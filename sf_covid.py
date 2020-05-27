@@ -181,7 +181,7 @@ if st.checkbox('Examine other counties in California?'):
         st.subheader('CA Raw COVID 19 Data')
         st.write(ca_data)
         st.write('Click on a column to sort.')
-    
+
     st.subheader('California COVID-19 Data')
     county = st.selectbox('Pick a county to look at:',
                           ca_county_list
