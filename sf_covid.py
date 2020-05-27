@@ -28,6 +28,11 @@ def load_data(nrows):
     data['zip_code'] = data['zip_code'].astype(str)
     return data
 
+st.sidebar.markdown('**Notice:** If you don\'t see your ZIP Code, '
+        'then it is possible that there are cases there '
+        'but the number of cases is below a certain limit.'
+        )
+
 data = load_data(27)
 if st.sidebar.checkbox('Show raw SF data'):
     st.subheader('Raw SF data')
@@ -151,10 +156,7 @@ for i, zcode in zip_rate_dict.items():
 
 st.write('For ', find_zip, ', the number of cases per 10k people is',
         zip_rate_data.loc[case_num, 'Rate'], '.')
-st.sidebar.markdown('**Notice:** If you don\'t see your ZIP Code, '
-        'then it is possible that there are cases there '
-        'but the number of cases is below a certain limit.'
-        )
+
 
 CA_DATA_URL = 'https://data.chhs.ca.gov/dataset/6882c390-b2d7-4b9a-aefa-2068cee63e47/resource/6cd8d424-dfaa-4bdd-9410-a3d656e1176e/download/covid19data.csv'
 CA_DATE_COL = 'Most Recent Date'
@@ -168,18 +170,35 @@ def load_ca_data(nrows):
     return ca_data
 
 ca_data = load_ca_data(2949)
+ca_data = ca_data.drop(columns='data_as_of')
+ca_county_list = ca_data['County Name'].unique()
+ca_data_columns = [col for col in list(ca_data.columns) if col not in ['County Name', 'Most Recent Date']]
 
-if st.sidebar.checkbox('Examine other counties in California?'):
-    st.subheader('CA Raw COVID 19 Data')
-    st.write(ca_data)
-    st.write('Click on a column to sort.')
+st.markdown('---')
 
-    #get the county names in a unique list
+if st.checkbox('Examine other counties in California?'):
+    if st.sidebar.checkbox('Show raw CA data'):
+        st.subheader('CA Raw COVID 19 Data')
+        st.write(ca_data)
+        st.write('Click on a column to sort.')
+    
+    st.subheader('California COVID-19 Data')
     county = st.selectbox('Pick a county to look at:',
-                          ca_data['County Name']
+                          ca_county_list
     )
+    ca_columns = st.selectbox('Select a column to graph.', ca_data_columns)
+    ca_subset_columns = ca_data.loc[ca_data['County Name'] == county]
+    ca_subset_columns['Most Recent Date'] = pd.to_datetime(ca_subset_columns['Most Recent Date'])
+    if st.checkbox('Show subsetted data'):
+        st.write(ca_subset_columns)
+    ca_graph_columns = ca_subset_columns[['Most Recent Date', ca_columns]]
+    county_chart = alt.Chart(ca_graph_columns).mark_line(point=True).encode(
+        x='Most Recent Date',
+        y = ca_columns,
+        tooltip = ['Most Recent Date', ca_columns],
+    ).interactive()
+    st.altair_chart(county_chart, use_container_width=True)
 
 
-
-
-st.sidebar.markdown('Made by Oliver Chen. Github repository available upon request.')
+st.sidebar.markdown('Made by Oliver Chen. '
+                    'Github repository available [here](https://github.com/boblandsky/Streamlit_tutorial).')
