@@ -148,7 +148,8 @@ for i, zcode in zip_rate_dict.items():
 st.write('For ', find_zip, ', the number of cases per 10k people is',
         zip_rate_data.loc[case_num, 'Rate'], '.')
 st.write('If you don\'t see your ZIP Code, '
-        'then it is possible the SF government has not ',
-        'collected data there.' )
+        'then it is possible that there are cases there but the SF government '
+        'has labeled the data as below a certain limit.'
+        )
 
 
