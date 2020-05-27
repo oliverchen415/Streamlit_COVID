@@ -182,21 +182,23 @@ if st.checkbox('Examine other counties in California?'):
         st.write(ca_data)
         st.write('Click on a column to sort.')
 
-    st.subheader('California COVID-19 Data')
+    st.subheader('California COVID-19 Data. Updated roughly once a week.')
     county = st.selectbox('Pick a county to look at:',
                           ca_county_list
     )
     ca_columns = st.selectbox('Select a column to graph.', ca_data_columns)
     ca_subset_columns = ca_data.loc[ca_data['County Name'] == county]
-    ca_subset_columns['Most Recent Date'] = pd.to_datetime(ca_subset_columns['Most Recent Date'])
+    ca_subset_columns.loc[:,'Most Recent Date'] = pd.to_datetime(ca_subset_columns.loc[:,'Most Recent Date'])
     if st.checkbox('Show subsetted data'):
         st.write(ca_subset_columns)
     ca_graph_columns = ca_subset_columns[['Most Recent Date', ca_columns]]
-    county_chart = alt.Chart(ca_graph_columns).mark_line(point=True).encode(
+    county_chart = alt.Chart(ca_graph_columns).mark_line(point=True, size=3).encode(
         x='Most Recent Date',
         y = ca_columns,
         tooltip = ['Most Recent Date', ca_columns],
-    ).interactive()
+    ).interactive().configure_point(
+        size=75
+    )
     st.altair_chart(county_chart, use_container_width=True)
 
 
