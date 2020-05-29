@@ -27,59 +27,7 @@ def load_data(nrows):
     data['zip_code'] = data['zip_code'].astype(str)
     return data
 
-st.sidebar.info('**Info:** If you don\'t see data for your ZIP Code, '
-        'there are 10 or fewer cases counted for your ZIP Code.'
-        )
-st.sidebar.warning('**Advanced Options**: '
-                    'Be warned that the raw data may not be displayed correctly. '
-                    'The charts and map should be using the data last published '
-                    'by the SF or CA government data portals.'
-)
-
 data = load_data(27)
-if st.sidebar.checkbox('Show raw SF data'):
-    st.subheader('Raw SF data')
-    st.write(data)
-    date_updated = data[DATE_COLUMN][0].to_pydatetime().date()
-    date_updated = date_updated.strftime('%B %d, %Y')
-    st.info(f'Click on a column name to sort. Last updated {date_updated}')
-
-st.subheader('Number of Confirmed Cases by ZIP Code')
-
-zip_data = pd.DataFrame({
-    'ZIPCode': data['zip_code'],
-    'CaseCount': data['count'],
-})
-zip_data.sort_values(by=['CaseCount'])
-
-zip_rate = pd.DataFrame({
-    'Rate': data['rate'],
-    'ZIPCode': data['zip_code'],
-})
-zip_rate['Rate'] = zip_rate.round({'Rate':1})
-
-c = alt.Chart(zip_data).mark_bar().encode(
-    y = alt.Y('ZIPCode:N', sort=alt.EncodingSortField(field='CaseCount', op='max', order='descending')),
-    x = 'CaseCount',
-    tooltip = ['ZIPCode', 'CaseCount']
-)
-
-chart_text = c.mark_text(
-    align = 'left',
-    baseline = 'middle',
-    dx = 3
-).encode(
-    text = 'Case Count'
-)
-
-(c+chart_text).properties(height=900)
-
-st.altair_chart(c,use_container_width=True)
-st.info('Mouse over a bar to see the number of cases. '
-        'To expand the graph, click the fullscreen button on the side of the graph.'
-)
-
-st.subheader('Map of COVID-19 Cases by ZIP Code')
 
 map_zip_code = pd.DataFrame({
     'ZIPCode': [
@@ -107,6 +55,18 @@ map_zip_code = pd.DataFrame({
         -122.4,-122.402
     ],})
 
+zip_data = pd.DataFrame({
+    'ZIPCode': data['zip_code'],
+    'CaseCount': data['count'],
+})
+zip_data.sort_values(by=['CaseCount'])
+
+zip_rate = pd.DataFrame({
+    'Rate': data['rate'],
+    'ZIPCode': data['zip_code'],
+})
+zip_rate['Rate'] = zip_rate.round({'Rate':1})
+
 map_zip_count = zip_data[zip_data.loc[:,'ZIPCode'].isin(map_zip_code['ZIPCode'])]
 map_zip_count = map_zip_count.dropna()
 
@@ -119,10 +79,51 @@ zip_rate_data = zip_rate_data.sort_values(by=['ZIPCode'])
 zip_rate_data = zip_rate_data.reset_index(drop=True)
 zip_rate_dict = zip_rate_data.loc[:,'ZIPCode'].to_dict()
 
+
+
+st.sidebar.info('**Info:** If you don\'t see data for your ZIP Code, '
+        'there are 10 or fewer cases counted for your ZIP Code.'
+        )
+st.sidebar.warning('**Display Raw Data**: '
+                    'Be warned that the raw data may not be displayed correctly. '
+                    'The charts and map should be using the data last published '
+                    'by the SF or CA government data portals.'
+)
+
+if st.sidebar.checkbox('Show raw SF data'):
+    st.subheader('Raw SF data')
+    st.write(data)
+    date_updated = data[DATE_COLUMN][0].to_pydatetime().date()
+    date_updated = date_updated.strftime('%B %d, %Y')
+    st.info(f'Click on a column name to sort. Last updated {date_updated}')
 if st.sidebar.checkbox('Show raw SF map data'):
     st.subheader('Raw map data (for available districts)')
     st.write(zip_rate_data)
 
+st.subheader('Number of Confirmed Cases by ZIP Code')
+
+c = alt.Chart(zip_data).mark_bar().encode(
+    y = alt.Y('ZIPCode:N', sort=alt.EncodingSortField(field='CaseCount', op='max', order='descending')),
+    x = 'CaseCount',
+    tooltip = ['ZIPCode', 'CaseCount']
+)
+
+chart_text = c.mark_text(
+    align = 'left',
+    baseline = 'middle',
+    dx = 3
+).encode(
+    text = 'Case Count'
+)
+
+(c+chart_text).properties(height=900)
+
+st.altair_chart(c,use_container_width=True)
+st.info('Mouse over a bar to see the number of cases. '
+        'To expand the graph, click the fullscreen button on the side of the graph.'
+)
+
+st.subheader('Map of COVID-19 Cases by ZIP Code')
 
 st.pydeck_chart(pdk.Deck(
      map_style='mapbox://styles/mapbox/dark-v9',
@@ -179,9 +180,12 @@ def load_ca_data(nrows):
 
 ca_data = load_ca_data(2949)
 ca_data = ca_data.drop(columns='data_as_of')
+ca_data.loc[:, 'Most Recent Date'] = pd.to_datetime(ca_data.loc[:, 'Most Recent Date'])
+recent_date = ca_data.loc[:, 'Most Recent Date'].max().date().strftime('%B %d, %Y')
 ca_county_list = ca_data.loc[:,'County Name'].unique()
 ca_county_list = np.sort(ca_county_list)
 ca_data_columns = [col for col in list(ca_data.columns) if col not in ['County Name', 'Most Recent Date']]
+
 
 st.markdown('---')
 
@@ -191,7 +195,9 @@ if st.checkbox('Examine other counties in California?'):
         st.write(ca_data)
         st.write('Click on a column to sort.')
 
-    st.subheader('California COVID-19 Data.')
+    st.subheader('California COVID-19 Data')
+    st.markdown('Data sourced from '
+                '[data.ca.gov](https://data.ca.gov/dataset/california-covid-19-hospital-data-and-case-statistics/resource/5342afa3-0e58-40c0-ba2b-9206c3c5b288)')
     county = st.selectbox('Pick a county to look at:',
                           ca_county_list
     )
@@ -202,22 +208,18 @@ if st.checkbox('Examine other counties in California?'):
 
 
 
-    county_chart = alt.Chart(ca_graph_columns).mark_line(point=True, size=3).encode(
+    county_chart = alt.Chart(ca_graph_columns).mark_circle(size=60).encode(
         x='Most Recent Date',
         y = ca_columns,
         tooltip = ['Most Recent Date', ca_columns],
-    ).interactive().configure_point(
-        size=90
-    )
+    ).interactive()
     st.altair_chart(county_chart, use_container_width=True)
-    st.info('Mouse over a point to see the exact count.')
+    st.info(f'Mouse over a point to see the exact count. Data last updated on {recent_date}.')
 
     st.markdown('---')
 
     if st.sidebar.checkbox('Show subsetted CA data'):
         st.warning('The data from CA.gov appears to be updated once a week.')
-        st.markdown('Data sourced from '
-        '[data.ca.gov](https://data.ca.gov/dataset/california-covid-19-hospital-data-and-case-statistics/resource/5342afa3-0e58-40c0-ba2b-9206c3c5b288)')
         st.write(ca_subset_columns)
 
 
