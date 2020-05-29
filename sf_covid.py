@@ -27,22 +27,22 @@ def load_data(nrows):
     data['zip_code'] = data['zip_code'].astype(str)
     return data
 
-st.sidebar.markdown('**Notice:** If you don\'t see your ZIP Code, '
-        'then it is possible that there are cases there '
-        'but the number of cases is below a certain limit.'
+st.sidebar.info('**Info:** If you don\'t see data for your ZIP Code, '
+        'there are 10 or fewer cases counted for your ZIP Code.'
         )
+st.sidebar.warning('**Advanced Options**: '
+                    'Be warned that the raw data may not be displayed correctly. '
+                    'The charts and map should be using the data last published '
+                    'by the SF or CA government data portals.'
+)
 
 data = load_data(27)
 if st.sidebar.checkbox('Show raw SF data'):
     st.subheader('Raw SF data')
-    st.warning('Warning: Data may appear to be out of date. '
-                'It may require me to restart the Heroku dyno. '
-                'Otherwise the data should appear to be correct.'
-    )
     st.write(data)
     date_updated = data[DATE_COLUMN][0].to_pydatetime().date()
     date_updated = date_updated.strftime('%B %d, %Y')
-    st.write(f'Click on a column name to sort. Last updated {date_updated}')
+    st.info(f'Click on a column name to sort. Last updated {date_updated}')
 
 st.subheader('Number of Confirmed Cases by ZIP Code')
 
@@ -50,6 +50,7 @@ zip_data = pd.DataFrame({
     'ZIPCode': data['zip_code'],
     'CaseCount': data['count'],
 })
+zip_data.sort_values(by=['CaseCount'])
 
 zip_rate = pd.DataFrame({
     'Rate': data['rate'],
@@ -58,8 +59,8 @@ zip_rate = pd.DataFrame({
 zip_rate['Rate'] = zip_rate.round({'Rate':1})
 
 c = alt.Chart(zip_data).mark_bar().encode(
-    x = 'ZIPCode',
-    y = 'CaseCount',
+    y = alt.Y('ZIPCode:N', sort=alt.EncodingSortField(field='CaseCount', op='max', order='descending')),
+    x = 'CaseCount',
     tooltip = ['ZIPCode', 'CaseCount']
 )
 
@@ -74,7 +75,9 @@ chart_text = c.mark_text(
 (c+chart_text).properties(height=900)
 
 st.altair_chart(c,use_container_width=True)
-st.info('Mouse over a bar to see the number of cases.')
+st.info('Mouse over a bar to see the number of cases. '
+        'To expand the graph, click the fullscreen button on the side of the graph.'
+)
 
 st.subheader('Map of COVID-19 Cases by ZIP Code')
 
@@ -204,7 +207,7 @@ if st.checkbox('Examine other counties in California?'):
         y = ca_columns,
         tooltip = ['Most Recent Date', ca_columns],
     ).interactive().configure_point(
-        size=75
+        size=90
     )
     st.altair_chart(county_chart, use_container_width=True)
     st.info('Mouse over a point to see the exact count.')
