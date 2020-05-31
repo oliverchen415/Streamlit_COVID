@@ -84,7 +84,7 @@ zip_rate_dict = zip_rate_data.loc[:,'ZIPCode'].to_dict()
 st.sidebar.info('**Info:** If you don\'t see data for your ZIP Code, '
         'there are 10 or fewer cases counted for your ZIP Code.'
         )
-st.sidebar.warning('**Display Raw Data**: '
+st.sidebar.warning('**Show Raw Data**: '
                     'Be warned that the raw data may not be displayed correctly. '
                     'The charts and map should be using the data last published '
                     'by the SF or CA government data portals.'
@@ -100,7 +100,7 @@ if st.sidebar.checkbox('Show raw SF map data'):
     st.subheader('Raw map data (for available districts)')
     st.write(zip_rate_data)
 
-st.subheader('Number of Confirmed Cases by ZIP Code')
+st.subheader('Number of Confirmed SF Cases by ZIP Code')
 
 c = alt.Chart(zip_data).mark_bar().encode(
     y = alt.Y('ZIPCode:N', sort=alt.EncodingSortField(field='CaseCount', op='max', order='descending')),
