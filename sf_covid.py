@@ -20,15 +20,16 @@ st.markdown('Data sourced from '
 
 @st.cache
 def load_data(nrows):
+    # Caches the data
+    # Cleans up the dates and ZIP codes
     data = pd.read_csv(DATA_URL, nrows=nrows)
-    #lowercase = lambda x: str(x).lower()
-    #data.rename(lowercase, axis='columns', inplace=True)
     data[DATE_COLUMN] = pd.to_datetime(data[DATE_COLUMN])
     data['zip_code'] = data['zip_code'].astype(str)
     return data
 
 data = load_data(27)
 
+# My latitude and longitude information for each ZIP code that has data in SF data csv
 map_zip_code = pd.DataFrame({
     'ZIPCode': [
         '94129','94123','94109','94133','94130',
