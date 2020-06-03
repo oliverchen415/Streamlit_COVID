@@ -165,21 +165,21 @@ for i, zcode in zip_rate_dict.items():
         case_num = i
 
 st.write('For ', find_zip, ', the number of cases per 10k people is',
-        zip_rate_data.loc[case_num, 'Rate'], '.')
+        str(zip_rate_data.loc[case_num, 'Rate']), '.')
 
 
 CA_DATA_URL = 'https://data.chhs.ca.gov/dataset/6882c390-b2d7-4b9a-aefa-2068cee63e47/resource/6cd8d424-dfaa-4bdd-9410-a3d656e1176e/download/covid19data.csv'
 CA_DATE_COL = 'Most Recent Date'
 
 @st.cache
-def load_ca_data(nrows):
-    ca_data = pd.read_csv(CA_DATA_URL, nrows=nrows)
+def load_ca_data():
+    ca_data = pd.read_csv(CA_DATA_URL)
     #lowercase = lambda x: str(x).lower()
     #data.rename(lowercase, axis='columns', inplace=True)
     ca_data.loc[:,DATE_COLUMN] = ca_data.loc[:, CA_DATE_COL].map(pd.to_datetime)
     return ca_data
 
-ca_data = load_ca_data(2949)
+ca_data = load_ca_data()
 ca_data = ca_data.drop(columns='data_as_of')
 ca_data.loc[:, 'Most Recent Date'] = pd.to_datetime(ca_data.loc[:, 'Most Recent Date'])
 recent_date = ca_data.loc[:, 'Most Recent Date'].max().date().strftime('%B %d, %Y')
