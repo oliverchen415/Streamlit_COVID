@@ -12,22 +12,38 @@ yest = pnd.yesterday().format('MMMM DD, YYYY')
 st.title(f"SF COVID Cases by Census ZIP Code")
 st.header(f'As of {today}')
 
-DATA_URL = ('https://data.sfgov.org/resource/favi-qct6.csv?$$app_token=yh5qaeaJSvJrdOSv77ZnroO2u')
-DATE_COLUMN = 'data_as_of'
+# DATA_URL = ('https://data.sfgov.org/resource/favi-qct6.csv?$$app_token=yh5qaeaJSvJrdOSv77ZnroO2u')
+# DATE_COLUMN = 'data_as_of'
+
+DATA_URL = ('https://data.sfgov.org/resource/tpyr-dvnc.csv?$$app_token=yh5qaeaJSvJrdOSv77ZnroO2u')
+DATE_COLUMN = 'last_updated_at'
+
+# st.markdown('Data sourced from '
+            # '[data.sfgov.org](https://data.sfgov.org/COVID-19/Rate-of-COVID-19-Cases-by-Census-ZIP-Code-Tabulati/favi-qct6)')
 
 st.markdown('Data sourced from '
-            '[data.sfgov.org](https://data.sfgov.org/COVID-19/Rate-of-COVID-19-Cases-by-Census-ZIP-Code-Tabulati/favi-qct6)')
+            '[data.sfgov.org](https://data.sfgov.org/COVID-19/COVID-19-Cases-and-Deaths-Summarized-by-Geography/tpyr-dvnc)'
+)
 
 @st.cache
+# def load_data(nrows):
+#     # Caches the data
+#     # Cleans up the dates and ZIP codes
+#     data = pd.read_csv(DATA_URL, nrows=nrows)
+#     data[DATE_COLUMN] = pd.to_datetime(data[DATE_COLUMN])
+#     data['zip_code'] = data['zip_code'].astype(str)
+#     return data
 def load_data(nrows):
     # Caches the data
     # Cleans up the dates and ZIP codes
     data = pd.read_csv(DATA_URL, nrows=nrows)
     data[DATE_COLUMN] = pd.to_datetime(data[DATE_COLUMN])
-    data['zip_code'] = data['zip_code'].astype(str)
+    data = data[data['area_type']=='ZCTA']
+    data = data.drop(['area_type', 'multipolygon'], axis=1).rename(columns={'id': 'zip_code'})
+    data = data.reset_index().drop('index', axis=1)
     return data
 
-data = load_data(27)
+data = load_data(264)
 
 # My latitude and longitude information for each ZIP code that has data in SF data csv
 map_zip_code = pd.DataFrame({
@@ -86,20 +102,17 @@ st.sidebar.info('**Info:** If you don\'t see data for your ZIP Code, '
         'there are 10 or fewer cases counted for your ZIP Code.'
         )
 st.sidebar.warning('**Show Raw Data**: '
-                    'Be warned that the raw data may not be displayed correctly. '
+                    'Due to caching, the raw data may not display correctly. '
                     'The charts and map should be using the data last published '
                     'by the SF or CA government data portals.'
 )
 
 if st.sidebar.checkbox('Show raw SF data'):
     st.subheader('Raw SF data')
-    st.write(data)
+    st.table(data)
     date_updated = data[DATE_COLUMN][0].to_pydatetime().date()
     date_updated = date_updated.strftime('%B %d, %Y')
     st.info(f'Click on a column name to sort. Last updated {date_updated}')
-if st.sidebar.checkbox('Show raw SF map data'):
-    st.subheader('Raw map data (for available districts)')
-    st.write(zip_rate_data)
 
 st.subheader('Number of Confirmed SF Cases by ZIP Code')
 
@@ -176,12 +189,12 @@ def load_ca_data():
     ca_data = pd.read_csv(CA_DATA_URL)
     #lowercase = lambda x: str(x).lower()
     #data.rename(lowercase, axis='columns', inplace=True)
-    ca_data.loc[:,DATE_COLUMN] = ca_data.loc[:, CA_DATE_COL].map(pd.to_datetime)
+    ca_data.loc[:, CA_DATE_COL] = ca_data.loc[:, CA_DATE_COL].map(pd.to_datetime)
+    # ca_data.loc[:, CA_DATE_COL] = pd.to_datetime(ca_data.loc[:, 'Most Recent Date'])
     return ca_data
 
 ca_data = load_ca_data()
-ca_data = ca_data.drop(columns='data_as_of')
-ca_data.loc[:, 'Most Recent Date'] = pd.to_datetime(ca_data.loc[:, 'Most Recent Date'])
+# ca_data.loc[:, 'Most Recent Date'] = pd.to_datetime(ca_data.loc[:, 'Most Recent Date'])
 recent_date = ca_data.loc[:, 'Most Recent Date'].max().date().strftime('%B %d, %Y')
 ca_county_list = ca_data.loc[:,'County Name'].unique()
 ca_county_list = np.sort(ca_county_list)
@@ -220,7 +233,6 @@ if st.checkbox('Examine other counties in California?'):
     st.markdown('---')
 
     if st.sidebar.checkbox('Show subsetted CA data'):
-        st.warning('The data from CA.gov appears to be updated once a week.')
         st.write(ca_subset_columns)
 
 
