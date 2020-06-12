@@ -109,7 +109,7 @@ st.sidebar.warning('**Show Raw Data**: '
 
 if st.sidebar.checkbox('Show raw SF data'):
     st.subheader('Raw SF data')
-    st.table(data)
+    st.write(data)
     date_updated = data[DATE_COLUMN][0].to_pydatetime().date()
     date_updated = date_updated.strftime('%B %d, %Y')
     st.info(f'Click on a column name to sort. Last updated {date_updated}')
