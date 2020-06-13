@@ -1,10 +1,10 @@
-import streamlit as st
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 import altair as alt
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 import pendulum as pnd
 import pydeck as pdk
+import streamlit as st
 
 today = pnd.now(tz='US/Pacific').format('MMMM DD, YYYY')
 yest = pnd.yesterday().format('MMMM DD, YYYY')
@@ -15,15 +15,14 @@ st.header(f'As of {today}')
 # DATA_URL = ('https://data.sfgov.org/resource/favi-qct6.csv?$$app_token=yh5qaeaJSvJrdOSv77ZnroO2u')
 # DATE_COLUMN = 'data_as_of'
 
-DATA_URL = ('https://data.sfgov.org/resource/tpyr-dvnc.csv?$$app_token=yh5qaeaJSvJrdOSv77ZnroO2u')
-DATE_COLUMN = 'last_updated_at'
-
 # st.markdown('Data sourced from '
             # '[data.sfgov.org](https://data.sfgov.org/COVID-19/Rate-of-COVID-19-Cases-by-Census-ZIP-Code-Tabulati/favi-qct6)')
 
+
+DATA_URL = ('https://data.sfgov.org/resource/tpyr-dvnc.csv?$$app_token=yh5qaeaJSvJrdOSv77ZnroO2u')
+DATE_COLUMN = 'last_updated_at'
 st.markdown('Data sourced from '
-            '[data.sfgov.org](https://data.sfgov.org/COVID-19/COVID-19-Cases-and-Deaths-Summarized-by-Geography/tpyr-dvnc)'
-)
+            '[data.sfgov.org](https://data.sfgov.org/COVID-19/COVID-19-Cases-and-Deaths-Summarized-by-Geography/tpyr-dvnc)')
 
 @st.cache
 # def load_data(nrows):
@@ -197,9 +196,8 @@ ca_data = load_ca_data()
 # ca_data.loc[:, 'Most Recent Date'] = pd.to_datetime(ca_data.loc[:, 'Most Recent Date'])
 recent_date = ca_data.loc[:, 'Most Recent Date'].max().date().strftime('%B %d, %Y')
 ca_county_list = ca_data.loc[:,'County Name'].unique()
-ca_county_list = np.sort(ca_county_list)
+ca_county_list = np.sort(ca_county_list).tolist()
 ca_data_columns = [col for col in list(ca_data.columns) if col not in ['County Name', 'Most Recent Date']]
-
 
 st.markdown('---')
 
@@ -212,30 +210,29 @@ if st.checkbox('Examine other counties in California?'):
     st.subheader('California COVID-19 Data')
     st.markdown('Data sourced from '
                 '[data.ca.gov](https://data.ca.gov/dataset/california-covid-19-hospital-data-and-case-statistics/resource/5342afa3-0e58-40c0-ba2b-9206c3c5b288)')
-    county = st.selectbox('Pick a county to look at:',
-                          ca_county_list
-    )
-    ca_columns = st.selectbox('Select a column to graph.', ca_data_columns)
-    ca_subset_columns = ca_data.loc[ca_data['County Name'] == county]
+    county = st.multiselect('Pick a county to look at:',
+                          ca_county_list,
+                          ['San Francisco', 'Sacramento', 'Santa Clara']
+                          )
+    ca_columns = st.selectbox('Select a column to graph.',
+                                ca_data_columns)
+    ca_subset_columns = ca_data.loc[ca_data['County Name'].isin(county)].copy()
     ca_subset_columns.loc[:, 'Most Recent Date'] = ca_subset_columns.loc[:, 'Most Recent Date'].map(pd.to_datetime)
-    ca_graph_columns = ca_subset_columns.loc[:,('Most Recent Date', ca_columns)]
+    ca_graph_columns = ca_subset_columns.loc[:,('County Name', 'Most Recent Date', ca_columns)]
 
-
-
-    county_chart = alt.Chart(ca_graph_columns).mark_circle(size=60).encode(
+    county_chart = alt.Chart(ca_graph_columns).mark_line(size=5).encode(
         x='Most Recent Date',
         y = ca_columns,
-        tooltip = ['Most Recent Date', ca_columns],
+        color = alt.Color('County Name', legend=alt.Legend(labelFontSize=15)),
+        tooltip = ['County Name', 'Most Recent Date', ca_columns],
     ).interactive()
     st.altair_chart(county_chart, use_container_width=True)
-    st.info(f'Mouse over a point to see the exact count. Data last updated on {recent_date}.')
+    st.info(f'Mouse over the line to see the exact count. Data last updated on {recent_date}.')
 
     st.markdown('---')
 
     if st.sidebar.checkbox('Show subsetted CA data'):
         st.write(ca_subset_columns)
-
-
 
 st.sidebar.markdown('Made by Oliver Chen. '
                     'Github repository available [here](https://github.com/boblandsky/Streamlit_tutorial).')
