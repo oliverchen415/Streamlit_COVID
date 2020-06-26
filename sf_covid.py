@@ -5,21 +5,25 @@ import pandas as pd
 import pendulum as pnd
 import pydeck as pdk
 import streamlit as st
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 today = pnd.now(tz='US/Pacific').format('MMMM DD, YYYY')
 yest = pnd.yesterday().format('MMMM DD, YYYY')
 
 st.title(f"COVID-19 Dashboard")
 st.header(f'SF Cumulative Cases As of {today}')
+env_key = 'API_KEY'
 
-# DATA_URL = ('https://data.sfgov.org/resource/favi-qct6.csv?$$app_token=yh5qaeaJSvJrdOSv77ZnroO2u')
+# DATA_URL = ('https://data.sfgov.org/resource/favi-qct6.csv?$$app_token=lolnope')
 # DATE_COLUMN = 'data_as_of'
 
 # st.markdown('Data sourced from '
             # '[data.sfgov.org](https://data.sfgov.org/COVID-19/Rate-of-COVID-19-Cases-by-Census-ZIP-Code-Tabulati/favi-qct6)')
 
 
-DATA_URL = ('https://data.sfgov.org/resource/tpyr-dvnc.csv?$$app_token=yh5qaeaJSvJrdOSv77ZnroO2u')
+DATA_URL = (f'https://data.sfgov.org/resource/tpyr-dvnc.csv?$$app_token={os.getenv(env_key)}')
 DATE_COLUMN = 'last_updated_at'
 st.markdown('Data sourced from '
             '[data.sfgov.org](https://data.sfgov.org/COVID-19/COVID-19-Cases-and-Deaths-Summarized-by-Geography/tpyr-dvnc)')
