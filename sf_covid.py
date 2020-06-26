@@ -208,7 +208,7 @@ st.info('Mouse over a circle to see the number of cases per 10,000 people. '
 
 # CA_DATA_URL = 'https://data.chhs.ca.gov/dataset/6882c390-b2d7-4b9a-aefa-2068cee63e47/resource/6cd8d424-dfaa-4bdd-9410-a3d656e1176e/download/covid19data.csv'
 CA_DATA_URL = 'https://data.ca.gov/dataset/590188d5-8545-4c93-a9a0-e230f0db7290/resource/926fd08f-cc91-4828-af38-bd45de97f8c3/download/statewide_cases.csv'
-CA_DATE_COL = 'DATE'
+CA_DATE_COL = 'date'
 
 @st.cache
 def load_ca_data():
@@ -221,10 +221,12 @@ def load_ca_data():
 
 ca_data = load_ca_data()
 ca_data = ca_data.rename(columns={
-    'TOTALCOUNTCONFIRMED': 'TOTAL COUNT CONFIRMED',
-    'TOTALCOUNTDEATHS': 'TOTAL COUNT DEATHS',
-    'NEWCOUNTCONFIRMED': 'NEW COUNT CONFIRMED',
-    'NEWCOUNTDEATHS': 'NEW COUNT DEATHS',
+    'county': 'COUNTY',
+    'totalcountconfirmed': 'TOTAL COUNT CONFIRMED',
+    'totalcountdeaths': 'TOTAL COUNT DEATHS',
+    'newcountconfirmed': 'NEW COUNT CONFIRMED',
+    'newcountdeaths': 'NEW COUNT DEATHS',
+    'date': 'DATE'
     })
 # st.write(ca_data)
 # ca_data.loc[:, 'Most Recent Date'] = pd.to_datetime(ca_data.loc[:, 'Most Recent Date'])
@@ -250,7 +252,7 @@ if st.checkbox('Examine other counties in California?'):
 
     st.header('California COVID-19 Data')
     st.markdown('Data sourced from '
-                '[data.ca.gov](https://data.ca.gov/dataset/california-covid-19-hospital-data-and-case-statistics/resource/5342afa3-0e58-40c0-ba2b-9206c3c5b288)')
+                '[data.ca.gov](https://data.ca.gov/dataset/covid-19-cases/resource/926fd08f-cc91-4828-af38-bd45de97f8c3)')
 #                 '[data.ca.gov](https://data.ca.gov/dataset/california-covid-19-hospital-data-and-case-statistics/resource/5342afa3-0e58-40c0-ba2b-9206c3c5b288)')
     county = st.multiselect('Pick one or more counties to look at:',
                           ca_county_list,
