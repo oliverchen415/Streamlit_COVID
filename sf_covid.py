@@ -236,7 +236,7 @@ ca_county_list = np.sort(ca_county_list).tolist()
 ca_data_columns = [col for col in list(ca_data.columns) if col not in ['COUNTY', 'DATE']]
 # st.write(ca_data_columns)
 
-# st.markdown('---')
+st.markdown('---')
 
 if st.checkbox('Examine other counties in California?'):
     if st.sidebar.checkbox('Show raw CA data'):
