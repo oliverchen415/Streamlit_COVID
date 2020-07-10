@@ -6,6 +6,13 @@
 
 ---
 
+## Overview
+* Created a web dashboard using Streamlit to visualize COVID-19 cases in San Francisco based on ZIP code, as well as cases in other California counties
+* Data accessed from [Data SF](datasf.org) and [CA Data](data.ca.gov)
+* Data processed and visualized using Pandas, Altair, Pydeck
+* Deployed the Streamlit app on Heroku
+
+---
 ## Goal
 I wanted to put to use what I've learned about libraries such as Pandas and Altair. I found Streamlit, a way to make dashboards in Python and since we're in the middle of a pandemic (as of writing this), I wanted to apply it to making a dashboard for visualizing information on COVID-19.
 
