@@ -273,7 +273,7 @@ if st.checkbox('Examine other counties in California?'):
         y = ca_columns,
         color = alt.Color('COUNTY', legend=alt.Legend(labelFontSize=15)),
         tooltip = ['COUNTY', 'DATE', ca_columns],
-    ).interactive()
+    )
     st.altair_chart(county_chart, use_container_width=True)
     st.info('Mouse over the line to see the exact count. '
             f'Data last updated on {recent_date}. '
@@ -282,4 +282,4 @@ if st.checkbox('Examine other counties in California?'):
     st.markdown('---')
 
 st.sidebar.markdown('Made by Oliver Chen. '
-                    'Github repository available [here](https://github.com/boblandsky/Streamlit_tutorial).')
+                    'Github repository available [here](https://github.com/oliverchen415/Streamlit_tutorial).')
