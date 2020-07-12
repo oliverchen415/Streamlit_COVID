@@ -282,4 +282,4 @@ if st.checkbox('Examine other counties in California?'):
     st.markdown('---')
 
 st.sidebar.markdown('Made by Oliver Chen. '
-                    'Github repository available [here](https://github.com/oliverchen415/Streamlit_tutorial).')
+                    'Github repository available [here](https://github.com/oliverchen415/Streamlit_COVID).')
