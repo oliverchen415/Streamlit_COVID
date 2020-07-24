@@ -277,9 +277,6 @@ def max_in_state(colnames):
 for columns in column_names[0:2]:
     st.write(max_in_state(columns))
 
-st.warning('Dates are correctly loaded from the dataset, but for some reason the dataset '
-           'is not loading correctly when deployed to Heroku. It appears fine locally.')
-
 st.markdown('---')
 
 if st.checkbox('Examine other counties in California?'):
