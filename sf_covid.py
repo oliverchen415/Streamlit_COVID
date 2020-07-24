@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pendulum as pnd
-from pendulum import yesterday
 import pydeck as pdk
 import streamlit as st
 import os
@@ -248,15 +247,15 @@ def max_in_county(column):
     if column == 'TOTAL COUNT CONFIRMED':
             return (f'{ca_data.iloc[column_max]["COUNTY"]} has a total of '
                     f'{int(ca_data.iloc[column_max][column])} cases '
-                    # f'({round(ca_data.iloc[column_max][column]/yest_data.loc[:, column].sum(), 2)*100}% '
-                    # f'of all cases in CA) '
+                    f'({round(ca_data.iloc[column_max][column]/yest_data.loc[:, column].sum(), 2)*100}% '
+                    f'of all cases in CA) '
                     f'and {int(ca_data.iloc[column_max]["NEW COUNT CONFIRMED"])} new cases.'
                     )
     elif column == 'TOTAL COUNT DEATHS':
             return (f'{ca_data.iloc[column_max]["COUNTY"]} has a total of '
                     f'{int(ca_data.iloc[column_max][column])} deaths '
-                    # f'({round(ca_data.iloc[column_max][column]/yest_data.loc[:, column].sum(), 2)*100}% '
-                    # f'of all deaths in CA) '
+                    f'({round(ca_data.iloc[column_max][column]/yest_data.loc[:, column].sum(), 2)*100}% '
+                    f'of all deaths in CA) '
                     f'and {int(ca_data.iloc[column_max]["NEW COUNT DEATHS"])} new deaths.'
                     )
 
@@ -265,18 +264,21 @@ st.write(f'The worst hit county is {ca_data.iloc[ca_data.loc[:, "TOTAL COUNT CON
 for columns in column_names[0:2]:
     st.write(max_in_county(columns))
 
-# def max_in_state(colnames):
-#     if colnames == 'TOTAL COUNT CONFIRMED':
-#         return (f'California has a total of {int(yest_data.loc[:, "TOTAL COUNT CONFIRMED"].sum())} cases '
-#                 f'and {int(yest_data.loc[:, "NEW COUNT CONFIRMED"].sum())} new cases.'
-#                 )
-#     elif colnames == 'TOTAL COUNT DEATHS':
-#         return (f'California has a total of {int(yest_data.loc[:, "TOTAL COUNT DEATHS"].sum())} deaths '
-#                 f'and {int(yest_data.loc[:, "NEW COUNT DEATHS"].sum())} new deaths.'
-#                 )
+def max_in_state(colnames):
+    if colnames == 'TOTAL COUNT CONFIRMED':
+        return (f'California has a total of {int(yest_data.loc[:, "TOTAL COUNT CONFIRMED"].sum())} cases '
+                f'and {int(yest_data.loc[:, "NEW COUNT CONFIRMED"].sum())} new cases.'
+                )
+    elif colnames == 'TOTAL COUNT DEATHS':
+        return (f'California has a total of {int(yest_data.loc[:, "TOTAL COUNT DEATHS"].sum())} deaths '
+                f'and {int(yest_data.loc[:, "NEW COUNT DEATHS"].sum())} new deaths.'
+                )
 
-# for columns in column_names[0:2]:
-#     st.write(max_in_state(columns))
+for columns in column_names[0:2]:
+    st.write(max_in_state(columns))
+
+st.warning('Dates are correctly loaded from the dataset, but for some reason the dataset '
+           'is not loading correctly when deployed to Heroku. It appears fine locally.')
 
 st.markdown('---')
 
