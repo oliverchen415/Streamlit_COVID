@@ -9,8 +9,8 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-today = pnd.now(tz='US/Pacific').format('MMMM DD, YYYY')
-yest = pnd.yesterday().format('MMMM DD, YYYY')
+today = pnd.now(tz='US/Pacific').format('MMM DD, YYYY')
+yest = pnd.yesterday().format('MMM DD, YYYY')
 
 st.title(f"COVID-19 Dashboard")
 st.header(f'SF Cumulative Cases As of {today}')
@@ -240,7 +240,7 @@ ca_data_columns = [col for col in list(ca_data.columns) if col not in ['COUNTY',
 st.markdown('---')
 
 column_names = ['TOTAL COUNT CONFIRMED', 'TOTAL COUNT DEATHS', 'NEW COUNT CONFIRMED', 'NEW COUNT DEATHS']
-yest_data = ca_data[ca_data.loc[:, 'DATE'].dt.floor('d') == pnd.yesterday().to_formatted_date_string()].copy()
+yest_data = ca_data[ca_data.loc[:, 'DATE'].dt.floor('d') == yest].copy()
 
 def max_in_county(column):
     column_max = ca_data.loc[:, column].idxmax()
@@ -259,7 +259,7 @@ def max_in_county(column):
                     f'and {int(ca_data.iloc[column_max]["NEW COUNT DEATHS"])} new deaths.'
                     )
 
-st.markdown(f'**Quick CA Stats as of {pnd.yesterday().to_formatted_date_string()}**:')
+st.markdown(f'**Quick CA Stats as of {yest}**:')
 st.write(f'The worst hit county is {ca_data.iloc[ca_data.loc[:, "TOTAL COUNT CONFIRMED"].idxmax()]["COUNTY"]}.')
 for columns in column_names[0:2]:
     st.write(max_in_county(columns))
