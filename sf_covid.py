@@ -241,7 +241,7 @@ ca_data_columns = [col for col in list(ca_data.columns) if col not in ['COUNTY',
 st.markdown('---')
 
 column_names = ['TOTAL COUNT CONFIRMED', 'TOTAL COUNT DEATHS', 'NEW COUNT CONFIRMED', 'NEW COUNT DEATHS']
-yest_data = ca_data[ca_data.loc[:, 'DATE'] == pnd.yesterday().to_formatted_date_string()]
+yest_data = ca_data[ca_data.loc[:, 'DATE'].dt.floor('d') == pnd.yesterday().to_formatted_date_string()].copy()
 
 def max_in_county(column):
     column_max = ca_data.loc[:, column].idxmax()
@@ -295,7 +295,7 @@ if st.checkbox('Examine other counties in California?'):
     st.markdown('Data sourced from '
                 '[data.ca.gov](https://data.ca.gov/dataset/covid-19-cases/resource/926fd08f-cc91-4828-af38-bd45de97f8c3)')
 #                 '[data.ca.gov](https://data.ca.gov/dataset/california-covid-19-hospital-data-and-case-statistics/resource/5342afa3-0e58-40c0-ba2b-9206c3c5b288)')
-    
+
 
     county = st.multiselect('Pick one or more counties to look at:',
                           ca_county_list,
