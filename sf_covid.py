@@ -240,7 +240,10 @@ ca_data_columns = [col for col in list(ca_data.columns) if col not in ['COUNTY',
 st.markdown('---')
 
 column_names = ['TOTAL COUNT CONFIRMED', 'TOTAL COUNT DEATHS', 'NEW COUNT CONFIRMED', 'NEW COUNT DEATHS']
-yest_data = ca_data[ca_data.loc[:, 'DATE'].dt.floor('d') == yest].copy()
+if ca_data.loc[:, 'DATE'].max().date().strftime('%b %d, %Y') == yest:
+    yest_data = ca_data[ca_data.loc[:, 'DATE'].dt.floor('d') == yest].copy()
+else:
+    yest_data = ca_data[ca_data.loc[:, 'DATE'].dt.floor('d') == ca_data.loc[:, 'DATE'].max().date().strftime('%b %d, %Y')].copy()
 
 def max_in_county(column):
     column_max = ca_data.loc[:, column].idxmax()
