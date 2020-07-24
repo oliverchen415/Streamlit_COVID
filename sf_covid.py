@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pendulum as pnd
+from pendulum import yesterday
 import pydeck as pdk
 import streamlit as st
 import os
@@ -94,13 +95,6 @@ zip_rate_data = zip_rate_data.reset_index(drop=True).sort_values(by='ZIPCode')
 zip_rate_dict = zip_rate_data.loc[:,'ZIPCode'].to_dict()
 
 
-
-# st.sidebar.warning('**Show Raw Data**: '
-#                     'Due to caching, the raw data may not display correctly. '
-#                     'The charts and map should be using the data last published '
-#                     'by the SF or CA government data portals.'
-# )
-
 if st.sidebar.checkbox('Show raw SF data'):
     st.subheader('Raw SF data')
     data = data.rename(columns={
@@ -139,12 +133,14 @@ chart_text = c.mark_text(
 )
 
 (c+chart_text).properties(height=900)
-
 st.altair_chart(c,use_container_width=True)
+
 st.info('Mouse over a bar to see the number of cases. '
         'To expand the graph, click the toggle on the side of the graph. '
         'If your ZIP Code is not shown, fewer than 15 cases have been recorded there.'
 )
+
+st.markdown('---')
 
 find_zip = st.selectbox('Select your ZIP Code.',
                         zip_rate_data.loc[:,'ZIPCode'])
@@ -156,6 +152,8 @@ for i, zcode in zip_rate_dict.items():
 
 st.write('For ', find_zip, ', the number of cases per 10k people is',
         str(zip_rate_data.loc[case_num, 'Rate']), '.')
+
+# Map
 
 st.subheader('Map of COVID-19 Cases by ZIP Code')
 
@@ -210,6 +208,10 @@ st.info('Mouse over a circle to see the number of cases per 10,000 people. '
         )
 
 
+
+# California Data
+
+# Old url for reference
 # CA_DATA_URL = 'https://data.chhs.ca.gov/dataset/6882c390-b2d7-4b9a-aefa-2068cee63e47/resource/6cd8d424-dfaa-4bdd-9410-a3d656e1176e/download/covid19data.csv'
 CA_DATA_URL = 'https://data.ca.gov/dataset/590188d5-8545-4c93-a9a0-e230f0db7290/resource/926fd08f-cc91-4828-af38-bd45de97f8c3/download/statewide_cases.csv'
 CA_DATE_COL = 'date'
@@ -217,10 +219,7 @@ CA_DATE_COL = 'date'
 @st.cache
 def load_ca_data():
     ca_data = pd.read_csv(CA_DATA_URL)
-    #lowercase = lambda x: str(x).lower()
-    #data.rename(lowercase, axis='columns', inplace=True)
     ca_data.loc[:, CA_DATE_COL] = ca_data.loc[:, CA_DATE_COL].map(pd.to_datetime)
-    # ca_data.loc[:, CA_DATE_COL] = pd.to_datetime(ca_data.loc[:, 'Most Recent Date'])
     return ca_data
 
 ca_data = load_ca_data()
@@ -232,15 +231,52 @@ ca_data = ca_data.rename(columns={
     'newcountdeaths': 'NEW COUNT DEATHS',
     'date': 'DATE'
     })
-# st.write(ca_data)
-# ca_data.loc[:, 'Most Recent Date'] = pd.to_datetime(ca_data.loc[:, 'Most Recent Date'])
+
 recent_date = ca_data.loc[:, 'DATE'].max().date().strftime('%B %d, %Y')
 first_date = ca_data.loc[:, 'DATE'].min().date().strftime('%B %d, %Y')
 ca_county_list = ca_data.loc[:,'COUNTY'].unique()
 ca_county_list = np.sort(ca_county_list).tolist()
-# st.write(ca_county_list)
 ca_data_columns = [col for col in list(ca_data.columns) if col not in ['COUNTY', 'DATE']]
-# st.write(ca_data_columns)
+
+st.markdown('---')
+
+column_names = ['TOTAL COUNT CONFIRMED', 'TOTAL COUNT DEATHS', 'NEW COUNT CONFIRMED', 'NEW COUNT DEATHS']
+yest_data = ca_data[ca_data.loc[:, 'DATE'] == pnd.yesterday().to_formatted_date_string()]
+
+def max_in_county(column):
+    column_max = ca_data.loc[:, column].idxmax()
+    if column == 'TOTAL COUNT CONFIRMED':
+            return (f'{ca_data.iloc[column_max]["COUNTY"]} has a total of '
+                    f'{int(ca_data.iloc[column_max][column])} cases '
+                    f'({round(ca_data.iloc[column_max][column]/yest_data.loc[:, column].sum(), 2)*100}% '
+                    f'of all cases in CA) '
+                    f'and {int(ca_data.iloc[column_max]["NEW COUNT CONFIRMED"])} new cases.'
+                    )
+    elif column == 'TOTAL COUNT DEATHS':
+            return (f'{ca_data.iloc[column_max]["COUNTY"]} has a total of '
+                    f'{int(ca_data.iloc[column_max][column])} deaths '
+                    f'({round(ca_data.iloc[column_max][column]/yest_data.loc[:, column].sum(), 2)*100}% '
+                    f'of all deaths in CA) '
+                    f'and {int(ca_data.iloc[column_max]["NEW COUNT DEATHS"])} new deaths.'
+                    )
+
+st.markdown(f'**Quick CA Stats as of {pnd.yesterday().to_formatted_date_string()}**:')
+st.write(f'The worst hit county is {ca_data.iloc[ca_data.loc[:, "TOTAL COUNT CONFIRMED"].idxmax()]["COUNTY"]}.')
+for columns in column_names[0:2]:
+    st.write(max_in_county(columns))
+
+def max_in_state(colnames):
+    if colnames == 'TOTAL COUNT CONFIRMED':
+        return (f'California has a total of {int(yest_data.loc[:, "TOTAL COUNT CONFIRMED"].sum())} cases '
+                f'and {int(yest_data.loc[:, "NEW COUNT CONFIRMED"].sum())} new cases.'
+                )
+    elif colnames == 'TOTAL COUNT DEATHS':
+        return (f'California has a total of {int(yest_data.loc[:, "TOTAL COUNT DEATHS"].sum())} deaths '
+                f'and {int(yest_data.loc[:, "NEW COUNT DEATHS"].sum())} new deaths.'
+                )
+
+for columns in column_names[0:2]:
+    st.write(max_in_state(columns))
 
 st.markdown('---')
 
@@ -248,7 +284,8 @@ if st.checkbox('Examine other counties in California?'):
     if st.sidebar.checkbox('Show raw CA data'):
         st.subheader('CA Raw COVID 19 Data')
         st.write(ca_data)
-        st.info('Click on a column to sort. Click the toggle on the right side of the table to expand it.')
+        st.info('Click on a column to sort. '
+                'Click the toggle on the right side of the table to expand it.')
         st.warning("Unsure why the NEW COUNT columns go into the negatives, "
                    "since the total accumlation of deaths and confirmed cases "
                    "during the pandemic can't change."
@@ -258,6 +295,8 @@ if st.checkbox('Examine other counties in California?'):
     st.markdown('Data sourced from '
                 '[data.ca.gov](https://data.ca.gov/dataset/covid-19-cases/resource/926fd08f-cc91-4828-af38-bd45de97f8c3)')
 #                 '[data.ca.gov](https://data.ca.gov/dataset/california-covid-19-hospital-data-and-case-statistics/resource/5342afa3-0e58-40c0-ba2b-9206c3c5b288)')
+    
+
     county = st.multiselect('Pick one or more counties to look at:',
                           ca_county_list,
                           ['San Francisco', 'Sacramento', 'Santa Clara']
@@ -268,7 +307,7 @@ if st.checkbox('Examine other counties in California?'):
     ca_subset_columns.loc[:, 'DATE'] = ca_subset_columns.loc[:, 'DATE'].map(pd.to_datetime)
     ca_graph_columns = ca_subset_columns.loc[:,('COUNTY', 'DATE', ca_columns)].copy()
 
-    county_chart = alt.Chart(ca_graph_columns).mark_line(size=5).encode(
+    county_chart = alt.Chart(ca_graph_columns).mark_line(size=4).encode(
         x='DATE',
         y = ca_columns,
         color = alt.Color('COUNTY', legend=alt.Legend(labelFontSize=15)),
