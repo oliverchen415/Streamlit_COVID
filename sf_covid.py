@@ -240,7 +240,7 @@ ca_data_columns = [col for col in list(ca_data.columns) if col not in ['COUNTY',
 st.markdown('---')
 
 column_names = ['TOTAL COUNT CONFIRMED', 'TOTAL COUNT DEATHS', 'NEW COUNT CONFIRMED', 'NEW COUNT DEATHS']
-if ca_data.loc[:, 'DATE'].max().date().strftime('%b %d, %Y') == yest:
+if ca_data.loc[:, 'DATE'].max().date().strftime('%b %d, %Y') is yest:
     yest_data = ca_data[ca_data.loc[:, 'DATE'].dt.floor('d') == yest].copy()
 else:
     yest_data = ca_data[ca_data.loc[:, 'DATE'].dt.floor('d') == ca_data.loc[:, 'DATE'].max().date().strftime('%b %d, %Y')].copy()
@@ -296,7 +296,8 @@ if st.checkbox('Examine other counties in California?'):
     st.header('California COVID-19 Data')
     st.markdown('Data sourced from '
                 '[data.ca.gov](https://data.ca.gov/dataset/covid-19-cases/resource/926fd08f-cc91-4828-af38-bd45de97f8c3)')
-#                 '[data.ca.gov](https://data.ca.gov/dataset/california-covid-19-hospital-data-and-case-statistics/resource/5342afa3-0e58-40c0-ba2b-9206c3c5b288)')
+#               old url for reference
+#               '[data.ca.gov](https://data.ca.gov/dataset/california-covid-19-hospital-data-and-case-statistics/resource/5342afa3-0e58-40c0-ba2b-9206c3c5b288)')
 
 
     county = st.multiselect('Pick one or more counties to look at:',
